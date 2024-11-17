@@ -129,13 +129,13 @@ class Trainer:
         self.model.eval()
         
         if self.eval_val:
-            print('\n{}[{}]{}'.format(30*'-', 'Evaluate (Val)', 30*'-'))
+            print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Val)', 30*'-'))
             f, p, r = evaluate_eval(self.model, self.eval_loader_topic, self.eval_loader_content, self.topic2content,
                                     margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
                                     max_contents=self.config.max_contents)
         
         if self.eval_train:
-            print('\n{}[{}]{}'.format(30*'-', 'Evaluate (Train)', 30*'-'))
+            print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Train)', 30*'-'))
             missing_pairs, topic2wrong = evaluate_train(self.model, self.train_loader_topic, self.train_loader_content, self.topic2content,
                                                         self.content2topic, margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
                                                         max_contents=self.config.max_contents)
@@ -152,6 +152,7 @@ class Trainer:
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
             if self.config.rank == 0:
                 self.evaluate()
+                torch.cuda.synchronize()
             if self.distributed:
                 print(f"{self.config.rank} waiting...")
                 dist.barrier()
