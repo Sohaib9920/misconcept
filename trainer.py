@@ -131,7 +131,7 @@ class Trainer:
         if hasattr(self.model, "module"): # Running eval on one gpu without synch.
             model = self.model.module
         print(model)
-        time.sleep(20)
+        time.sleep(60)
 
         # if self.eval_val:
         #     print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Val)', 30*'-'))
