@@ -155,6 +155,8 @@ class Trainer:
             print('\n{}[{}| Epoch: {}]{}'.format(30*'-', self.config.rank, epoch, 30*'-'))
             epoch_loss = self.train_epoch()
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
+            import time; time.sleep(10)
+            dist.barrier()
             if self.config.rank == 0:
                 self.evaluate()
             if self.distributed:
