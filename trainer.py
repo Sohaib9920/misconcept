@@ -6,6 +6,7 @@ from model_utils import CLIPLoss
 from eval import evaluate_eval, evaluate_train
 import math
 import torch.distributed as dist
+import time
 
 
 class Trainer:
@@ -129,6 +130,8 @@ class Trainer:
         self.model.eval()
         if hasattr(self.model, "module"): # Running eval on one gpu without synch.
             model = self.model.module
+        print(model)
+        time.sleep(20)
 
         if self.eval_val:
             print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Val)', 30*'-'))
