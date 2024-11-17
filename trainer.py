@@ -158,6 +158,7 @@ class Trainer:
             if self.config.rank == 0:
                 # self.evaluate()
                 import time; time.sleep(60)
+            time.sleep(5)
             if self.distributed:
                 dist.barrier()
         
