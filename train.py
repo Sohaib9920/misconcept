@@ -21,6 +21,8 @@ class Configuration:
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
+    eval_val = False
+    eval_train = False
     margin: float = 0.16
     eval_batch_size: int = 768
     max_contents = 128
@@ -94,10 +96,17 @@ splitter = BatchSplitter() if config.distributed else None
 train_dataset = TrainDataset(train_pairs, topic2content, content2topic, config.train_batch_size, tokenizer, topic2text, content2text, config.max_len)
 train_loader = DataLoader(train_dataset, batch_size=None, collate_fn=splitter, shuffle=True)
 
-print("train loader (eval)")
-train_loader_topic, train_loader_content = prepare_eval_loaders(config, tokenizer, train_topics, train_contents, topic2text, content2text)
-print("eval loader")
-eval_loader_topic, eval_loader_content = prepare_eval_loaders(config, tokenizer, eval_topics, eval_contents, topic2text, content2text)
+if config.eval_train:
+    print("train loader (eval)")
+    train_loader_topic, train_loader_content = prepare_eval_loaders(config, tokenizer, train_topics, train_contents, topic2text, content2text)
+else:
+    train_loader_topic, train_loader_content = None, None
+
+if config.eval_val:
+    print("eval loader")
+    eval_loader_topic, eval_loader_content = prepare_eval_loaders(config, tokenizer, eval_topics, eval_contents, topic2text, content2text)
+else:
+    eval_loader_topic, eval_loader_content = None, None
 
 # Preparing model
 model = Net(config)
