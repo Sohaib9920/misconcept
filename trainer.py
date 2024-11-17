@@ -6,7 +6,6 @@ from model_utils import CLIPLoss
 from eval import evaluate_eval, evaluate_train
 import math
 import torch.distributed as dist
-import time
 
 
 class Trainer:
@@ -128,16 +127,18 @@ class Trainer:
     
     def evaluate(self):
         self.model.eval()
-        
+        if hasattr(self.model, "module"): # Running eval on one gpu without synch.
+            model = self.model.module
+
         if self.eval_val:
             print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Val)', 30*'-'))
-            f, p, r = evaluate_eval(self.model, self.eval_loader_topic, self.eval_loader_content, self.topic2content,
+            f, p, r = evaluate_eval(model, self.eval_loader_topic, self.eval_loader_content, self.topic2content,
                                     margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
                                     max_contents=self.config.max_contents)
         
         if self.eval_train:
             print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Train)', 30*'-'))
-            missing_pairs, topic2wrong = evaluate_train(self.model, self.train_loader_topic, self.train_loader_content, self.topic2content,
+            missing_pairs, topic2wrong = evaluate_train(model, self.train_loader_topic, self.train_loader_content, self.topic2content,
                                                         self.content2topic, margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
                                                         max_contents=self.config.max_contents)
                                                             
@@ -152,11 +153,8 @@ class Trainer:
             epoch_loss = self.train_epoch()
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
             if self.config.rank == 0:
-                # self.evaluate()
-                print("rank 0 is sleeping")
-                time.sleep(20)
+                self.evaluate()
             if self.distributed:
-                print(f"{self.config.rank} waiting...")
                 dist.barrier()
         
         print(f"{self.config.rank}: End")
