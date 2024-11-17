@@ -149,6 +149,7 @@ class Trainer:
 
     
     def train(self):
+        import time
         set_seed(self.config.seed) 
         
         for epoch in range(1, self.config.epochs + 1):
@@ -157,7 +158,7 @@ class Trainer:
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
             if self.config.rank == 0:
                 # self.evaluate()
-                import time; time.sleep(60)
+                time.sleep(60)
             time.sleep(5)
             if self.distributed:
                 dist.barrier()
