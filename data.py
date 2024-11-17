@@ -166,6 +166,7 @@ class TrainDataset(Dataset):
                 # Add hard negatives to the batch
                 if wrong_pool and len(current_batch) < self.batch_size:
                     wrong_pairs = wrong_pool.get(topic, [])
+                    random.shuffle(wrong_pairs)
                     wrong_added = 0
                     for wp in wrong_pairs:
                         wt, wc = wp

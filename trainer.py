@@ -154,3 +154,5 @@ class Trainer:
                 self.evaluate()
             if self.distributed:
                 dist.barrier()
+        
+        print(f"{self.config.rank}: End")

@@ -116,3 +116,5 @@ trainer = Trainer(config, model, train_loader,
                   topic2content=topic2content, content2topic=content2topic)
 
 trainer.train()
+if config.distributed:
+    dist.destroy_process_group()

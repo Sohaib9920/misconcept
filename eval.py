@@ -219,7 +219,6 @@ def evaluate_train(model, train_loader_topic, train_loader_content, gt_topic2con
             other_topics = content2topic[wc]
             for ot in other_topics:
                 candidates.append((ot, wc))
-        random.shuffle(candidates)
         topic2wrong[t] = candidates
     
     return missing_pairs, topic2wrong
