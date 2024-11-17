@@ -72,7 +72,7 @@ class Trainer:
         self.model.train()
         
         steps_per_epoch = len(self.train_loader) # found at each epoch as it is dynamic
-        bar = tqdm(total=steps_per_epoch, desc="Training Steps")
+        bar = tqdm(total=steps_per_epoch, desc="Training Steps", dynamic_ncols=True)
 
         device = self.config.device
         epoch_loss = 0

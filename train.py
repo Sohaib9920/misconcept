@@ -21,8 +21,8 @@ class Configuration:
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
-    eval_val = False
-    eval_train = False
+    eval_val = True
+    eval_train = True
     margin: float = 0.16
     eval_batch_size: int = 768
     max_contents = 128
