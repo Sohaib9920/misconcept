@@ -6,6 +6,7 @@ from model_utils import CLIPLoss
 from eval import evaluate_eval, evaluate_train
 import math
 import torch.distributed as dist
+import time
 
 
 class Trainer:
@@ -151,8 +152,9 @@ class Trainer:
             epoch_loss = self.train_epoch()
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
             if self.config.rank == 0:
-                self.evaluate()
-                torch.cuda.synchronize()
+                # self.evaluate()
+                print("rank 0 is sleeping")
+                time.sleep(20)
             if self.distributed:
                 print(f"{self.config.rank} waiting...")
                 dist.barrier()
