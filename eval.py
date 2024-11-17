@@ -6,7 +6,7 @@ import gc
 from typing import Set, Dict
 import random
 
-def encode(model, dataloader, verbose=True, fp16=False, bf16=False):
+def encode(model, dataloader, fp16=False, bf16=False):
     '''
     Find normalized pooled embeddings for whole data under evaluation
     '''
@@ -20,7 +20,7 @@ def encode(model, dataloader, verbose=True, fp16=False, bf16=False):
     amp_dtype = torch.float16 if fp16 else torch.bfloat16 if bf16 else None
     
     # Use tqdm progress bar if verbose is enabled
-    bar = tqdm(dataloader, total=len(dataloader)) if verbose else dataloader
+    bar = tqdm(dataloader, total=len(dataloader))
     
     features_list = []
     ids_list = []
@@ -51,8 +51,7 @@ def encode(model, dataloader, verbose=True, fp16=False, bf16=False):
         # Concatenate features across batches
         features = torch.cat(features_list, dim=0)
 
-    if verbose:
-        bar.close()
+    bar.close()
     
     # Convert lists to numpy arrays for consistent return types
     ids = np.array(ids_list)
