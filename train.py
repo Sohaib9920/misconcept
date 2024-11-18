@@ -75,6 +75,8 @@ else:
     config.world_size = dist.get_world_size()
 
 config.device = config.rank if torch.cuda.is_available() else "cpu"
+if config.device != "cpu":
+    torch.cuda.set_device(config.device)
 
 set_seed(config.seed)
 
