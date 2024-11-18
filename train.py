@@ -32,12 +32,12 @@ class Configuration:
     bf16: bool = False
     
     # Debugging
-    debug = True                     
+    debug = False                     
         
     # Training 
     seed: int = 42
-    epochs: int = 2
-    train_batch_size: int = 256
+    epochs: int = 10
+    train_batch_size: int = 512
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
     torch_dtype = torch.float32
@@ -49,8 +49,8 @@ class Configuration:
     
     # Learning Rate
     lr: float = 0.0002                   
-    scheduler: str = None       
-    warmup_ratio: float = 1/4
+    scheduler: str = "cosine"       
+    warmup_ratio: float = 2/10
     
     # Data
     fold: int = 0                        
