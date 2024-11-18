@@ -6,7 +6,6 @@ from model_utils import CLIPLoss
 from eval import evaluate_eval, evaluate_train
 import math
 import torch.distributed as dist
-import time
 
 
 class Trainer:

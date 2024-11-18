@@ -53,6 +53,8 @@ class Net(nn.Module):
             self.transformer = AutoModel.from_pretrained(config.transformer, 
                                                         config=self.config, 
                                                         torch_dtype=config.torch_dtype,
+                                                        attention_probs_dropout_prob=0.,
+                                                        hidden_dropout_prob=0.,
                                                         add_pooling_layer=(config.pooling=="pooler")
                                                         )
         except TypeError:
