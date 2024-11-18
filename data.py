@@ -54,6 +54,7 @@ class TrainDataset(Dataset):
         """
         if self.splitter is not None:
             batch = self.splitter(batch)
+            print("I am working")
         inputs = self.tokenize_pairs_batch(batch, self.tokenizer, self.topic2text, self.content2text, self.max_len)
         return inputs
 
