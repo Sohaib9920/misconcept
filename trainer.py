@@ -127,7 +127,7 @@ class Trainer:
 
     
     def evaluate(self):
-        model = model.module
+        model = self.model.module
         with torch.no_grad():
             model.eval()
 
