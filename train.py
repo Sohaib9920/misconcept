@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import torch
-import os
 import pandas as pd
 import torch.distributed as dist
 from transformers import set_seed, AutoTokenizer
