@@ -49,7 +49,7 @@ class Configuration:
     
     # Learning Rate
     lr: float = 0.0002                   
-    scheduler: str = "cosine"       
+    scheduler: str = None       
     warmup_ratio: float = 0.5/2
     
     # Data
