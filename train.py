@@ -32,12 +32,12 @@ class Configuration:
     bf16: bool = False
     
     # Debugging
-    debug = False                     
+    debug = True                     
         
     # Training 
     seed: int = 42
     epochs: int = 2
-    train_batch_size: int = 768
+    train_batch_size: int = 256
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
     torch_dtype = torch.float32
