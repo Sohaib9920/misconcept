@@ -117,6 +117,7 @@ class Trainer:
                 self.scheduler.step()
     
             epoch_loss += step_loss / steps_per_epoch
+            print(step_loss)
     
             bar.set_postfix(ordered_dict=log_info)
             bar.update(1)
