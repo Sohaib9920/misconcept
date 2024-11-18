@@ -127,23 +127,21 @@ class Trainer:
 
     
     def evaluate(self):
-        model = self.model.module
-        with torch.no_grad():
-            model.eval()
+        self.model.eval()
 
-            if self.eval_val:
-                print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Val)', 30*'-'))
-                f, p, r = evaluate_eval(model, self.eval_loader_topic, self.eval_loader_content, self.topic2content,
-                                        margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
-                                        max_contents=self.config.max_contents)
-            
-            if self.eval_train:
-                print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Train)', 30*'-'))
-                missing_pairs, topic2wrong = evaluate_train(model, self.train_loader_topic, self.train_loader_content, self.topic2content,
-                                                            self.content2topic, margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
-                                                            max_contents=self.config.max_contents)
-                                                                
-                self.train_loader.dataset.shuffle(missing_pairs, topic2wrong, max_wrong=self.config.max_wrong, missing_freq=self.config.missing_freq)
+        if self.eval_val:
+            print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Val)', 30*'-'))
+            f, p, r = evaluate_eval(self.model, self.eval_loader_topic, self.eval_loader_content, self.topic2content,
+                                    margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
+                                    max_contents=self.config.max_contents)
+        
+        if self.eval_train:
+            print('\n{}[{}| {}]{}'.format(30*'-', self.config.rank, 'Evaluate (Train)', 30*'-'))
+            missing_pairs, topic2wrong = evaluate_train(self.model, self.train_loader_topic, self.train_loader_content, self.topic2content,
+                                                        self.content2topic, margin=self.config.margin, fp16=self.config.fp16, bf16=self.config.bf16, 
+                                                        max_contents=self.config.max_contents)
+                                                            
+            self.train_loader.dataset.shuffle(missing_pairs, topic2wrong, max_wrong=self.config.max_wrong, missing_freq=self.config.missing_freq)
 
     
     def train(self):
@@ -153,8 +151,7 @@ class Trainer:
             print('\n{}[{}| Epoch: {}]{}'.format(30*'-', self.config.rank, epoch, 30*'-'))
             epoch_loss = self.train_epoch()
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
-            if self.config.rank == 0:
-                self.evaluate()
+            self.evaluate()
             dist.barrier()
 
         print(f"{self.config.rank}: End")
