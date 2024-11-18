@@ -23,7 +23,7 @@ class Configuration:
     eval_val = True
     eval_train = True
     margin: float = 0.16
-    eval_batch_size: int = 768
+    eval_batch_size: int = 1024
     max_contents = 128
 
     # Others
@@ -36,7 +36,7 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 2
-    train_batch_size: int = 1024
+    train_batch_size: int = 768
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
     torch_dtype = torch.float32
