@@ -10,7 +10,7 @@ from model_utils import Net
 from trainer import Trainer
 from sklearn.model_selection import train_test_split
 from torch.nn.parallel import DistributedDataParallel as DDP
-
+import os
 
 @dataclass
 class Configuration:
@@ -63,7 +63,7 @@ class Configuration:
 # Setup
 config = Configuration() 
 
-if dist.is_initialized():
+if os.environ.get("LOCAL_RANK") is not None:
     config.distributed = True
     dist.init_process_group(backend='nccl')
     config.rank = dist.get_rank()
