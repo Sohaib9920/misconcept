@@ -36,8 +36,8 @@ class Configuration:
         
     # Training 
     seed: int = 42
-    epochs: int = 10
-    train_batch_size: int = 512
+    epochs: int = 2
+    train_batch_size: int = 768
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
     torch_dtype = torch.float32
@@ -50,7 +50,7 @@ class Configuration:
     # Learning Rate
     lr: float = 0.0002                   
     scheduler: str = "cosine"       
-    warmup_ratio: float = 2/10
+    warmup_ratio: float = 0.5/2
     
     # Data
     fold: int = 0                        
