@@ -84,7 +84,6 @@ class Trainer:
         for i, batch in enumerate(self.train_loader):
             t_input_ids, t_attention_mask = batch["t_input_ids"].to(device, non_blocking=True), batch["t_attention_mask"].to(device, non_blocking=True)
             c_input_ids, c_attention_mask = batch["c_input_ids"].to(device, non_blocking=True), batch["c_attention_mask"].to(device, non_blocking=True)
-            print(f"\n{t_input_ids} ({t_input_ids.shape}) |{c_input_ids} ({c_input_ids.shape})\n")
 
             with self.amp_context:
                 t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)

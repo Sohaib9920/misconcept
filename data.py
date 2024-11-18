@@ -1,4 +1,5 @@
 from typing import List, Tuple, Dict, Set
+import torch.distributed
 from torch.utils.data import Dataset
 from collections import deque
 import random
@@ -294,6 +295,11 @@ class BatchSplitter:
 
     @staticmethod
     def chunk(data, num_chunks):
+        import torch
+        if isinstance(data, torch.tensor):
+            print("{}:{}".format(torch.distributed.get_rank(), data))
+
+
         if num_chunks <= 0:
             return []
         
