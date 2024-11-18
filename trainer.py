@@ -128,7 +128,7 @@ class Trainer:
     
     def evaluate(self):
         self.model.eval()
-        
+
         if hasattr(self.model, "module"): # Running eval on one gpu without synch.
             model = self.model.module
 
@@ -148,6 +148,7 @@ class Trainer:
 
     
     def train(self):
+        import time
         set_seed(self.config.seed) 
         
         for epoch in range(1, self.config.epochs + 1):
@@ -155,7 +156,8 @@ class Trainer:
             epoch_loss = self.train_epoch()
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
             if self.config.rank == 0:
-                self.evaluate()
+                # self.evaluate()
+                time.sleep(20)
             dist.barrier()
 
         print(f"{self.config.rank}: End")
