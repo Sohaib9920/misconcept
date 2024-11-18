@@ -152,6 +152,7 @@ class Trainer:
             epoch_loss = self.train_epoch()
             print('{}| Epoch: {}, Train Loss = {:.3f}, Lr = {:.6f}'.format(self.config.rank, epoch, epoch_loss, self.optimizer.param_groups[0]['lr']))
             self.evaluate()
-            dist.barrier()
+            if self.distributed:
+                dist.barrier()
 
         print(f"{self.config.rank}: End")
