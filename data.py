@@ -295,11 +295,6 @@ class BatchSplitter:
 
     @staticmethod
     def chunk(data, num_chunks):
-        import torch
-        if isinstance(data, torch.Tensor):
-            print("{}:{}".format(torch.distributed.get_rank(), data))
-
-
         if num_chunks <= 0:
             return []
         
