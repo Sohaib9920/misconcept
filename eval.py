@@ -64,7 +64,7 @@ def encode(model, dataloader, fp16=False, bf16=False):
     return features, ids
 
 
-def predict(model, topic_dataloader, content_dataloader, fp16=False, bf16=False, margin=0.16, max_contents=128, chunk_size=5000):
+def predict(model, topic_dataloader, content_dataloader, fp16=False, bf16=False, margin=0.16, max_contents=128, chunk_size=1000):
     '''
     Encode the topics and contents and then find most related contents of topics
     '''
@@ -202,7 +202,7 @@ def evaluate_train(model, train_loader_topic, train_loader_content, gt_topic2con
 
     # Making unordered set ordered using sorted is must required otherwise DDP devices would have different order
     # and hence different batches leading to hang
-    
+
     missing_dict = {}
     wrong_dict = {}
     for t, cs in pd_topic2content.items():

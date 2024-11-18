@@ -23,7 +23,7 @@ class Configuration:
     eval_val = True
     eval_train = True
     margin: float = 0.16
-    eval_batch_size: int = 1024
+    eval_batch_size: int = 768
     max_contents = 128
 
     # Others
