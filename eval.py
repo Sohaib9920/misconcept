@@ -220,7 +220,7 @@ def evaluate_train(model, train_loader_topic, train_loader_content, gt_topic2con
                 candidates.append((ot, wc))
         topic2wrong[t] = candidates
     print(missing_pairs[-5:])
-    for k,v in topic2wrong:
+    for k,v in topic2wrong.items():
         continue
     print(k,v)
     return missing_pairs, topic2wrong
