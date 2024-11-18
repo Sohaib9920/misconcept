@@ -27,7 +27,7 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = False
+    fp16: bool = True
     bf16: bool = False
     
     # Debugging
@@ -36,7 +36,7 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 2
-    train_batch_size: int = 256
+    train_batch_size: int = 1024
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
     torch_dtype = torch.float32
@@ -48,7 +48,7 @@ class Configuration:
     
     # Learning Rate
     lr: float = 0.0002                   
-    scheduler: str = None       
+    scheduler: str = "cosine"       
     warmup_ratio: float = 0.5/2
     
     # Data
