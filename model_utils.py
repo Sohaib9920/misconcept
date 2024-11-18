@@ -49,19 +49,13 @@ class Net(nn.Module):
         super().__init__()
 
         self.config = AutoConfig.from_pretrained(config.transformer)
-        try:
-            self.transformer = AutoModel.from_pretrained(config.transformer, 
-                                                        config=self.config, 
-                                                        torch_dtype=config.torch_dtype,
-                                                        attention_probs_dropout_prob=0.,
-                                                        hidden_dropout_prob=0.,
-                                                        add_pooling_layer=(config.pooling=="pooler")
-                                                        )
-        except TypeError:
-            self.transformer = AutoModel.from_pretrained(config.transformer, 
-                                                        config=self.config, 
-                                                        torch_dtype=config.torch_dtype
-                                                        )
+        self.transformer = AutoModel.from_pretrained(config.transformer, 
+                                                    config=self.config, 
+                                                    torch_dtype=config.torch_dtype,
+                                                    attention_probs_dropout_prob=0.,
+                                                    hidden_dropout_prob=0.,
+                                                    add_pooling_layer=(config.pooling=="pooler")
+                                                    )
 
         if config.pooling == "cls":
             self.pooler = CLSPooling()
