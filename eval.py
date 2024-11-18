@@ -114,7 +114,7 @@ def predict_contents(similarity_matrix, topic_ids, content_ids, margin=0.16, max
         # Get relevent predicted contents and add them to predicted topic2content
         pd_contents = content_ids[indices.cpu()]
         topic = topic_ids[i]
-        pd_topic2content[topic] = set(pd_contents)
+        pd_topic2content[topic] = list(pd_contents) # need the order so keep it in list rather than set
     
     return pd_topic2content
 
@@ -198,13 +198,14 @@ def evaluate_train(model, train_loader_topic, train_loader_content, gt_topic2con
     missing_dict = {}
     wrong_dict = {}
     for t, cs in pd_topic2content.items():
+        cs = set(cs)
         gt = gt_topic2content[t]
         missing = gt - cs
         wrong = cs - gt
         if len(wrong) > 0:
-            wrong_dict[t] = wrong
+            wrong_dict[t] = sorted(wrong)
         if len(missing) > 0:
-            missing_dict[t] = missing
+            missing_dict[t] = sorted(missing)
 
     missing_pairs = []
     for t, mcs in missing_dict.items():
@@ -215,10 +216,11 @@ def evaluate_train(model, train_loader_topic, train_loader_content, gt_topic2con
     for t, wcs in wrong_dict.items():
         candidates = []
         for wc in wcs:
-            other_topics = content2topic[wc]
+            other_topics = sorted(content2topic[wc])
             for ot in other_topics:
                 candidates.append((ot, wc))
         topic2wrong[t] = candidates
+        
     print(missing_pairs[-5:])
     for k,v in topic2wrong.items():
         continue
