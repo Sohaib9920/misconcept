@@ -37,12 +37,23 @@ class TrainDataset(Dataset):
         self.content2text = content2text
         self.max_len = max_len
 
+        self.splitter = BatchSplitter() if dist.is_initialized() else None
+
     
     def __getitem__(self, index):
         """
-        Fetch a batch of tokenized inputs based on the given index.
+        Fetch a batch of pairs based on the given index.
         """
-        batch = self.batches[index]
+        pairs_batch = self.batches[index]
+        return pairs_batch
+    
+
+    def collater(self, pairs_batch):
+        """
+        Split the batch of pairs if it is distributed and then tokenize that split.
+        """
+        if self.splitter is not None:
+            batch = self.splitter(pairs_batch)
         inputs = self.tokenize_pairs_batch(batch, self.tokenizer, self.topic2text, self.content2text, self.max_len)
         return inputs
 

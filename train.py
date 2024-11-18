@@ -64,7 +64,7 @@ class Configuration:
 # Setup
 config = Configuration() 
 
-if os.environ.get('LOCAL_RANK') is None:
+if dist.is_initialized():
     config.distributed = False
     config.rank = 0
     config.world_size = 1
@@ -95,9 +95,9 @@ content2text = read_pkl("/kaggle/input/curriculum-split-data-prep/content2text.p
 
 assert config.train_batch_size % config.world_size == 0, "Train Batch size must be divisible by world size for proper gather operation"
 assert config.eval_batch_size % config.world_size == 0, "Eval Batch size must be divisible by world size for proper gather operation"
-splitter = BatchSplitter() if config.distributed else None    
+  
 train_dataset = TrainDataset(train_pairs, topic2content, content2topic, config.train_batch_size, tokenizer, topic2text, content2text, config.max_len)
-train_loader = DataLoader(train_dataset, batch_size=None, collate_fn=splitter, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=None, collate_fn=train_dataset.collater, shuffle=True)
 
 if config.eval_train:
     print("train loader (eval)")
