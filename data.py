@@ -48,12 +48,12 @@ class TrainDataset(Dataset):
         return pairs_batch
     
 
-    def collater(self, pairs_batch):
+    def collater(self, batch):
         """
         Split the batch of pairs if it is distributed and then tokenize that split.
         """
         if self.splitter is not None:
-            batch = self.splitter(pairs_batch)
+            batch = self.splitter(batch)
         inputs = self.tokenize_pairs_batch(batch, self.tokenizer, self.topic2text, self.content2text, self.max_len)
         return inputs
 
