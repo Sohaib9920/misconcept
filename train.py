@@ -31,7 +31,7 @@ class Configuration:
     bf16: bool = False
     
     # Debugging
-    debug = True                     
+    debug = False                     
         
     # Training 
     seed: int = 42
