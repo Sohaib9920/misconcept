@@ -1,6 +1,6 @@
 from collections import defaultdict
 from data import EvalDataset
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, DistributedSampler
 import pickle
 
 
@@ -58,19 +58,24 @@ def process_correlations(df_correlations, config):
 
 def prepare_eval_loaders(config, tokenizer, topics, contents, topic2text, content2text):
     dataset_topic = EvalDataset(topics, topic2text, tokenizer, config.max_len)
+    topic_sampler = DistributedSampler(dataset_topic) if config.distributed else None
+    batch_size = config.eval_batch_size // config.world_size if config.distributed else config.eval_batch_size
     loader_topic = DataLoader(
         dataset=dataset_topic, 
-        batch_size=config.eval_batch_size, 
+        batch_size=batch_size, 
         shuffle=False,
         pin_memory=True,
+        sampler=topic_sampler,
         collate_fn=dataset_topic.collater
     )
     dataset_content = EvalDataset(contents, content2text, tokenizer, config.max_len)
+    content_sampler = DistributedSampler(dataset_content) if config.distributed else None
     loader_content = DataLoader(
         dataset=dataset_content, 
-        batch_size=config.eval_batch_size, 
+        batch_size=batch_size, 
         shuffle=False,
         pin_memory=True,
+        sampler=content_sampler,
         collate_fn=dataset_content.collater
     )
 

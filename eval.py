@@ -4,7 +4,8 @@ import torch.nn.functional as F
 import numpy as np
 import gc
 from typing import Set, Dict
-import random
+import torch.distributed as dist
+
 
 def encode(model, dataloader, fp16=False, bf16=False):
     '''
@@ -19,7 +20,6 @@ def encode(model, dataloader, fp16=False, bf16=False):
     device = next(model.parameters()).device
     amp_dtype = torch.float16 if fp16 else torch.bfloat16 if bf16 else None
     
-    # Use tqdm progress bar if verbose is enabled
     bar = tqdm(dataloader, total=len(dataloader))
     
     features_list = []
@@ -29,14 +29,12 @@ def encode(model, dataloader, fp16=False, bf16=False):
         for batch in bar:
             input_ids, attention_mask, ids = batch["input_ids"], batch["attention_mask"], batch["id"]
             
-            # Move data to the appropriate device
             input_ids = input_ids.to(device)
             attention_mask = attention_mask.to(device)
             
             ids_list.extend(ids)
             
-            # Run the model prediction
-            with torch.amp.autocast(device_type=device.type, dtype=amp_dtype, enabled=(fp16 or bf16)):
+            with torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=(fp16 or bf16)):
                 
                 feature = model(input_ids=input_ids, attention_mask=attention_mask)
                 feature = F.normalize(feature, p=2, dim=-1)
@@ -45,21 +43,28 @@ def encode(model, dataloader, fp16=False, bf16=False):
                 # cast because model in float32 may give output in float32 under autocast 
                 # (e.g when last layer is layernorm or float() is used on ouput)
                 feature = feature.to(dtype=amp_dtype)
-                
                 features_list.append(feature)  
                 
-        # Concatenate features across batches
-        features = torch.cat(features_list, dim=0)
+    features = torch.cat(features_list, dim=0)
+    ids = np.array(ids_list) # array needed for indexing
+
+    if dist.is_initialized():
+        world_size = dist.get_world_size()
+        gathered_features = [torch.empty_like(features) for _ in range(world_size)]
+        dist.all_gather(gathered_features, features)
+        
+        gathered_ids = [None] * world_size
+        dist.all_gather_object(gathered_ids, ids)
+        
+        features = torch.cat(gathered_features, dim=0)
+        ids = np.concatenate(gathered_ids)
 
     bar.close()
-    
-    # Convert lists to numpy arrays for consistent return types
-    ids = np.array(ids_list)
-           
+
     return features, ids
 
 
-def predict(model, topic_dataloader, content_dataloader, fp16=False, bf16=False, margin=0.16, max_contents=128, chunk_size=10000):
+def predict(model, topic_dataloader, content_dataloader, fp16=False, bf16=False, margin=0.16, max_contents=128, chunk_size=5000):
     '''
     Encode the topics and contents and then find most related contents of topics
     '''
@@ -195,6 +200,9 @@ def evaluate_train(model, train_loader_topic, train_loader_content, gt_topic2con
     
     f, p, r = score_predictions(pd_topic2content, gt_topic2content)
 
+    # Making unordered set ordered using sorted is must required otherwise DDP devices would have different order
+    # and hence different batches leading to hang
+    
     missing_dict = {}
     wrong_dict = {}
     for t, cs in pd_topic2content.items():
