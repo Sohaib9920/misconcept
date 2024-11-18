@@ -64,14 +64,14 @@ class Configuration:
 config = Configuration() 
 
 if dist.is_initialized():
-    config.distributed = False
-    config.rank = 0
-    config.world_size = 1
-else:
     config.distributed = True
     dist.init_process_group(backend='nccl')
     config.rank = dist.get_rank()
     config.world_size = dist.get_world_size()
+else:
+    config.distributed = False
+    config.rank = 0
+    config.world_size = 1
 
 config.device = config.rank if torch.cuda.is_available() else "cpu"
 if config.device != "cpu":
