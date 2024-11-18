@@ -127,8 +127,6 @@ class Trainer:
 
     
     def evaluate(self):
-        self.model.eval()
-
         if hasattr(self.model, "module"): # Running eval on one gpu without synch.
             model = self.model.module
 
