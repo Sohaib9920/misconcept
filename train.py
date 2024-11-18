@@ -5,8 +5,8 @@ import pandas as pd
 import torch.distributed as dist
 from transformers import set_seed, AutoTokenizer
 from torch.utils.data import DataLoader
-from data import TrainDataset, BatchSplitter
-from utils import prepare_eval_loaders, read_pkl, process_correlations
+from data import TrainDataset, prepare_eval_loaders
+from utils import read_pkl, process_correlations
 from model_utils import Net
 from trainer import Trainer
 from sklearn.model_selection import train_test_split
