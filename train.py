@@ -73,8 +73,8 @@ else:
     config.rank = 0
     config.world_size = 1
 
-config.device = config.rank if torch.cuda.is_available() else "cpu"
-if config.device != "cpu":
+config.device = torch.device(config.rank if torch.cuda.is_available() else "cpu")
+if config.device.type != "cpu":
     torch.cuda.set_device(config.device) # must required for dist.barrier to work in case of DDP
 
 set_seed(config.seed)
