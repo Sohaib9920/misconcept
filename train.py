@@ -121,7 +121,7 @@ if config.rank == 0:
 if config.distributed:
     # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
     # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
-    model = DDP(model, device_ids=[config.rank], broadcast_buffers=False, find_unused_parameters=True)
+    model = DDP(model, device_ids=[config.rank], broadcast_buffers=False, find_unused_parameters=False)
 
 print("Before training {}|{}".format(torch.cuda.max_memory_allocated()/1e6, torch.cuda.max_memory_reserved()/1e6))
 
