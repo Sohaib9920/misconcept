@@ -31,16 +31,16 @@ class Configuration:
     bf16: bool = False
     
     # Debugging
-    debug = False                     
+    debug = True                     
         
     # Training 
     seed: int = 42
     epochs: int = 2
-    train_batch_size: int = 768
+    train_batch_size: int = 512
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
     torch_dtype = torch.float32
-    weight_decay = 0.01
+    weight_decay = 0.0
 
     # Optimizer
     max_grad_norm = 1.0                   
@@ -82,7 +82,7 @@ set_seed(config.seed)
 # loading correlation data
 df_correlations = pd.read_csv('/kaggle/input/curriculum-split-data-prep/correlations.csv')
 if config.debug:
-    _, df_correlations = train_test_split(df_correlations, stratify=df_correlations["fold"], random_state=config.seed, test_size=1000)
+    _, df_correlations = train_test_split(df_correlations, stratify=df_correlations["fold"], random_state=config.seed, test_size=5000)
     df_correlations.reset_index(drop=True, inplace=True)
 
 # Preparing data loaders
@@ -113,12 +113,17 @@ else:
 # Preparing model
 model = Net(config)
 model = model.to(config.device)
-print(f"Model device: {next(model.parameters()).device}")
-print(f"Model dtype: {next(model.parameters()).dtype}")
+
+if config.rank == 0:
+    for n, p in model.named_parameters():
+        print("{}|{}|{}|{}".format(n, p.dtype, p.requires_grad, p.device))
+
 if config.distributed:
     # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
     # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
-    model = DDP(model, device_ids=[config.rank], broadcast_buffers=False, find_unused_parameters=False)
+    model = DDP(model, device_ids=[config.rank], broadcast_buffers=False, find_unused_parameters=True)
+
+print("Before training {}|{}".format(torch.cuda.max_memory_allocated()/1e6, torch.cuda.max_memory_reserved()/1e6))
 
 # Training 
 trainer = Trainer(config, model, train_loader, 
@@ -127,5 +132,8 @@ trainer = Trainer(config, model, train_loader,
                   topic2content=topic2content, content2topic=content2topic)
 
 trainer.train()
+
+print("After training {}|{}".format(torch.cuda.max_memory_allocated()/1e6, torch.cuda.max_memory_reserved()/1e6))
+
 if config.distributed:
     dist.destroy_process_group()

@@ -49,9 +49,7 @@ class Net(nn.Module):
         super().__init__()
 
         self.transformer = AutoModel.from_pretrained(config.transformer, 
-                                                    torch_dtype=config.torch_dtype,
-                                                    add_pooling_layer=(config.pooling=="pooler")
-                                                    )
+                                                    torch_dtype=config.torch_dtype)
 
         if config.pooling == "cls":
             self.pooler = CLSPooling()
