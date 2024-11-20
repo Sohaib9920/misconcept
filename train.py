@@ -43,7 +43,7 @@ class Configuration:
 
     # model_config
     torch_dtype = torch.bfloat16
-    load_in_8bit = True
+    load_in_8bit = False
     load_in_4bit = False
     bnb_4bit_quant_type = "nf4"
     use_bnb_nested_quant = False
