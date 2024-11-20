@@ -77,7 +77,8 @@ class Net(nn.Module):
             self.pooler = MeanPooling()
     
         if config.gradient_checkpointing:
-            self.transformer.gradient_checkpointing_enable({"use_reentrant": config.use_reentrant})
+            # use_reentrant=False is required for distributed training
+            self.transformer.gradient_checkpointing_enable({"use_reentrant": False})
          
         # According to CLIP paper. temperature range: [0, inf], scale range: [inf, 0], ln(scale) range: [-inf, inf] 
         # It better to have unrestricted range for parameter so we take ln(scale)

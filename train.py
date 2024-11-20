@@ -38,15 +38,17 @@ class Configuration:
     epochs: int = 2
     train_batch_size: int = 128
     gradient_checkpointing: bool = True 
-    use_reentrant: bool = False
     weight_decay = 0.0
 
     # model_config
     torch_dtype = torch.float32
+    # Only use quantization when model size is very huge because when it is
+    # small and use_reentrant=False, then net gain is less then only using LORA
     load_in_8bit = True
     load_in_4bit = False
     bnb_4bit_quant_type = "nf4"
     use_bnb_nested_quant = False
+
     use_peft = True
     lora_r = 32 # 16
     lora_alpha = 64 # 32
