@@ -48,8 +48,8 @@ class Configuration:
     bnb_4bit_quant_type = "nf4"
     use_bnb_nested_quant = False
     use_peft = True
-    lora_r = 16
-    lora_alpha = 32
+    lora_r = 32 # 16
+    lora_alpha = 64 # 32
     lora_dropout = 0.0
     lora_target_modules = "all-linear"
 
