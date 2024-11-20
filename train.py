@@ -16,7 +16,7 @@ import os
 class Configuration:
     
     # Transformer
-    transformer: str = 'sentence-transformers/LaBSE'
+    transformer: str = "Qwen/Qwen2.5-7B-Instruct"
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
