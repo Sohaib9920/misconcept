@@ -112,6 +112,18 @@ else:
 
 # Preparing model
 model = Net(config)
+
+from peft import LoraConfig, get_peft_model
+lora_config = LoraConfig(
+    r=32,
+    target_modules="all-linear",
+    lora_alpha=64,
+    lora_dropout=0.
+)
+
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+
 model = model.to(config.device)
 
 if config.rank == 0:
