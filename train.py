@@ -16,7 +16,7 @@ import os
 class Configuration:
     
     # Transformer
-    transformer: str = "Qwen/Qwen2.5-7B-Instruct"
+    transformer: str = "sentence-transformers/LaBSE"
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
@@ -42,7 +42,7 @@ class Configuration:
     weight_decay = 0.0
 
     # model_config
-    torch_dtype = torch.bfloat16
+    torch_dtype = torch.float32
     load_in_8bit = False
     load_in_4bit = False
     bnb_4bit_quant_type = "nf4"
