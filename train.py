@@ -27,7 +27,7 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = True
+    fp16: bool = False
     bf16: bool = False
     
     # Debugging
@@ -44,15 +44,15 @@ class Configuration:
     torch_dtype = torch.float32
     # Only use quantization when model size is very huge because when it is
     # small and use_reentrant=False, then net gain is less then only using LORA
-    load_in_8bit = True
+    load_in_8bit = False
     load_in_4bit = False
     bnb_4bit_quant_type = "nf4"
     use_bnb_nested_quant = False
 
-    use_peft = True
-    lora_r = 32 # 16
-    lora_alpha = 64 # 32
-    lora_dropout = 0.0
+    use_peft = False
+    lora_r = 16
+    lora_alpha = 32
+    lora_dropout = 0.05
     lora_target_modules = "all-linear"
 
     # Optimizer
