@@ -121,8 +121,8 @@ lora_config = LoraConfig(
     lora_dropout=0.
 )
 
-model = get_peft_model(model, lora_config)
-model.print_trainable_parameters()
+model.transformer = get_peft_model(model.transformer, lora_config)
+model.transformer.print_trainable_parameters()
 
 model = model.to(config.device)
 
