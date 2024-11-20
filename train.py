@@ -42,7 +42,7 @@ class Configuration:
     weight_decay = 0.0
 
     # model_config
-    torch_dtype = torch.float32
+    torch_dtype = torch.bfloat16
     load_in_8bit = False
     load_in_4bit = False
     bnb_4bit_quant_type = "nf4"
