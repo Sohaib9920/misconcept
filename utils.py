@@ -1,6 +1,7 @@
 from collections import defaultdict
 import pickle
-
+from transformers import BitsAndBytesConfig
+from peft import LoraConfig
 
 def process_correlations(df_correlations, config):
     # Initialize required variables
@@ -58,3 +59,37 @@ def read_pkl(fp):
     with open(fp, "rb") as f:
         data = pickle.load(f)
     return data
+
+
+def get_quantization_config(model_config):
+    if model_config.load_in_4bit:
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=model_config.torch_dtype,  # For consistency with model weights, we use the same value as `torch_dtype`
+            bnb_4bit_quant_type=model_config.bnb_4bit_quant_type,
+            bnb_4bit_use_double_quant=model_config.use_bnb_nested_quant,
+            bnb_4bit_quant_storage=model_config.torch_dtype,
+        )
+    elif model_config.load_in_8bit:
+        quantization_config = BitsAndBytesConfig(
+            load_in_8bit=True,
+        )
+    else:
+        quantization_config = None
+
+    return quantization_config
+
+
+def get_peft_config(model_config):
+    if model_config.use_peft is False:
+        return None
+
+    peft_config = LoraConfig(
+        r=model_config.lora_r,
+        target_modules=model_config.lora_target_modules,
+        lora_alpha=model_config.lora_alpha,
+        lora_dropout=model_config.lora_dropout,
+        bias="none"
+    )
+
+    return peft_config

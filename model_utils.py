@@ -4,6 +4,8 @@ from transformers import AutoModel, AutoConfig
 import numpy as np
 import torch.nn.functional as F
 import torch.distributed as dist
+from utils import get_quantization_config, get_peft_config
+from peft import get_peft_model
 
 
 class MeanPooling(nn.Module):  
@@ -48,9 +50,15 @@ class Net(nn.Module):
         
         super().__init__()
 
-        self.transformer = AutoModel.from_pretrained(config.transformer, 
-                                                    torch_dtype=config.torch_dtype,
-                                                    add_pooling_layer=False)
+        quantization_config = get_quantization_config(config)
+        transformer = AutoModel.from_pretrained(config.transformer, 
+                                                torch_dtype=config.torch_dtype,
+                                                add_pooling_layer=False,
+                                                quantization_config=quantization_config)
+        peft_config = get_peft_config(config)
+        self.transformer = get_peft_model(transformer, peft_config)
+        self.transformer.print_trainable_parameters()
+        
 
         if config.pooling == "cls":
             self.pooler = CLSPooling()

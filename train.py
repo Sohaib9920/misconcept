@@ -39,8 +39,19 @@ class Configuration:
     train_batch_size: int = 512
     gradient_checkpointing: bool = True 
     use_reentrant: bool = False
-    torch_dtype = torch.float32
     weight_decay = 0.0
+
+    # model_config
+    torch_dtype = torch.float32
+    load_in_8bit = False
+    load_in_4bit = False
+    bnb_4bit_quant_type = "nf4"
+    use_bnb_nested_quant = False
+    use_peft = True
+    lora_r = 16
+    lora_alpha = 32
+    lora_dropout = 0.0
+    lora_target_modules = "all-linear"
 
     # Optimizer
     max_grad_norm = 1.0                   
@@ -112,18 +123,6 @@ else:
 
 # Preparing model
 model = Net(config)
-
-from peft import LoraConfig, get_peft_model
-lora_config = LoraConfig(
-    r=32,
-    target_modules="all-linear",
-    lora_alpha=64,
-    lora_dropout=0.
-)
-
-model.transformer = get_peft_model(model.transformer, lora_config)
-model.transformer.print_trainable_parameters()
-
 model = model.to(config.device)
 
 if config.rank == 0:
