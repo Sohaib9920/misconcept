@@ -63,9 +63,9 @@ class Net(nn.Module):
                                                     quantization_config=quantization_config)
             
         peft_config = get_peft_config(config)
-        self.transformer = get_peft_model(transformer, peft_config)
-        self.transformer.print_trainable_parameters()
-        
+        if peft_config:
+            self.transformer = get_peft_model(transformer, peft_config)
+            self.transformer.print_trainable_parameters()
 
         if config.pooling == "cls":
             self.pooler = CLSPooling()
