@@ -81,7 +81,6 @@ class Trainer:
             ds_config = {
                 "train_batch_size": config.train_batch_size,
                 "gradient_accumulation_steps": 1,
-                "gradient_clipping": 1.0,
                 "fp16": {
                     "enabled": config.fp16,
                     "loss_scale_window": 100
