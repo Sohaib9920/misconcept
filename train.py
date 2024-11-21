@@ -9,7 +9,6 @@ from utils import read_pkl, process_correlations
 from model_utils import Net
 from trainer import Trainer
 from sklearn.model_selection import train_test_split
-from torch.nn.parallel import DistributedDataParallel as DDP
 import os
 
 @dataclass
@@ -72,6 +71,9 @@ class Configuration:
     max_wrong: int = 128  
     missing_freq: float = 0.5
 
+    # deepspeed
+    zero: int = 0
+
 
 # Setup
 config = Configuration() 
@@ -79,6 +81,7 @@ config = Configuration()
 if os.environ.get("LOCAL_RANK") is not None:
     config.distributed = True
     dist.init_process_group(backend='nccl')
+    # deepspeed.init_distributed('nccl')
     config.rank = dist.get_rank()
     config.world_size = dist.get_world_size()
 else:
@@ -126,17 +129,6 @@ else:
 # Preparing model
 model = Net(config)
 model = model.to(config.device)
-
-if config.rank == 0:
-    for n, p in model.named_parameters():
-        print("{}|{}|{}|{}".format(n, p.dtype, p.requires_grad, p.device))
-
-if config.distributed:
-    # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
-    # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
-    model = DDP(model, device_ids=[config.rank], broadcast_buffers=False, find_unused_parameters=False)
-
-print("Before training {}|{}".format(torch.cuda.max_memory_allocated()/1e6, torch.cuda.max_memory_reserved()/1e6))
 
 # Training 
 trainer = Trainer(config, model, train_loader, 

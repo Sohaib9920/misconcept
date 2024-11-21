@@ -6,6 +6,7 @@ from model_utils import CLIPLoss
 from eval import evaluate_eval, evaluate_train
 import math
 import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 class Trainer:
@@ -38,22 +39,22 @@ class Trainer:
         else:
             self.eval_train = False
         
-        # Loss function
+        ########### Loss function ###########
         self.loss_function = CLIPLoss(label_smoothing=config.label_smoothing, distributed=self.distributed)
         
-        # Optimizer
-        decay_params = [p for p in model.parameters() if p.ndim >= 2]
-        non_decay_params = [p for p in model.parameters() if p.ndim < 2]
+        ########## Optimizer ###########
+        decay_params = [p for p in self.model.parameters() if p.ndim >= 2]
+        non_decay_params = [p for p in self.model.parameters() if p.ndim < 2]
         param_groups = [{"params": decay_params}, {"params": non_decay_params, "weight_decay": 0.0}]
         self.optimizer = optim.AdamW(param_groups, weight_decay=config.weight_decay, lr=config.lr)
         
-        # AMP Scaler and Context
+        ######### AMP Scaler and Context ##########
         use_amp = config.bf16 or config.fp16
         amp_dtype = torch.float16 if config.fp16 else torch.bfloat16 if config.bf16 else None
         self.scaler = torch.amp.GradScaler(enabled=use_amp and not config.bf16)
         self.amp_context = torch.amp.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp)
         
-        # Scheduler
+        ############ Scheduler ##############
         steps_per_epoch = len(train_loader)
         total_steps = config.epochs * steps_per_epoch * (1.5 if self.eval_train else 1) # investigate scedular for dynamic dataloader later
         if config.scheduler:
@@ -66,6 +67,41 @@ class Trainer:
                 self.scheduler = None
         else:
             self.scheduler = None
+        
+        ########## Wrapped Model Model ###########
+
+        if self.distributed:
+
+            # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
+            # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
+            self.model = DDP(self.model, device_ids=[self.config.rank], broadcast_buffers=False, find_unused_parameters=False)
+
+            # ds_config = {
+            #     "train_batch_size": self.config.train_batch_size,
+            #     "fp16": {
+            #         "enabled": self.config.fp16,
+            #         "loss_scale_window": 100
+            #     },
+            #     "bf16": {
+            #         "enabled": self.config.bf16
+            #     },
+            #     "zero_optimization": {
+            #         "stage": self.config.zero
+            #     }
+            # }
+
+            # self.model, self.optmizer, _, self.scheduler = deepspeed.initialize(model=self.model,
+            #                                                                     optimizer=self.optmizer,
+            #                                                                     config=ds_config,
+            #                                                                     lr_scheduler=self.scheduler,
+            #                                                                     dist_init_required=True)
+            
+
+        if self.config.rank == 0:
+            for n, p in self.model.named_parameters():
+                print("{}|{}|{}|{}".format(n, p.dtype, p.requires_grad, p.device))
+
+        print("Before training {}|{}".format(torch.cuda.max_memory_allocated()/1e6, torch.cuda.max_memory_reserved()/1e6))
             
 
     def train_epoch(self):
@@ -91,7 +127,14 @@ class Trainer:
                 logit_scale = self.model.module.logit_scale.exp() if self.distributed else self.model.logit_scale.exp()
                 loss = self.loss_function(t_features, c_features, logit_scale)
         
+            # t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
+            # c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
+            # logit_scale = self.model.logit_scale.exp()
+            # loss = self.loss_function(t_features, c_features, logit_scale)
+        
             self.scaler.scale(loss).backward()
+            # self.model.backward(loss)
+            
             step_loss = loss.item()
             log_info["step_loss"] = f"{step_loss:.5f}"
 
@@ -104,6 +147,12 @@ class Trainer:
             self.scaler.update()
             self.optimizer.zero_grad()
     
+            log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
+            if self.scheduler:
+                self.scheduler.step()
+
+            # self.model.step()
+
             with torch.no_grad():
                 if self.distributed:
                     self.model.module.logit_scale.clamp_(0, math.log(100))
@@ -111,11 +160,10 @@ class Trainer:
                 else:
                     self.model.logit_scale.clamp_(0, math.log(100))
                     log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
-
-            log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
-            if self.scheduler:
-                self.scheduler.step()
     
+                # self.model.logit_scale.clamp_(0, math.log(100))
+                # log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
+
             epoch_loss += step_loss / steps_per_epoch
     
             bar.set_postfix(ordered_dict=log_info)
