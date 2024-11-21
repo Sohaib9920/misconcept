@@ -8,6 +8,7 @@ import math
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import deepspeed
+from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam
 
 
 class Trainer:
@@ -46,8 +47,8 @@ class Trainer:
         ########## Optimizer ###########
         decay_params = [p for p in self.model.parameters() if p.ndim >= 2]
         non_decay_params = [p for p in self.model.parameters() if p.ndim < 2]
-        param_groups = [{"params": decay_params}, {"params": non_decay_params, "weight_decay": 0.0}]
-        self.optimizer = optim.AdamW(param_groups, weight_decay=config.weight_decay, lr=config.lr)
+        param_groups = [{"params": decay_params, "weight_decay": config.weight_decay}, {"params": non_decay_params, "weight_decay": 0.0}]
+        self.optimizer = FusedAdam(param_groups, lr=config.lr, betas=(0.9, 0.95))
         
         ######### AMP Scaler and Context ##########
         use_amp = config.bf16 or config.fp16
