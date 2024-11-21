@@ -27,7 +27,7 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = False
+    fp16: bool = True
     bf16: bool = False
     
     # Debugging
@@ -74,6 +74,7 @@ class Configuration:
 
     # deepspeed
     zero: int = 0
+    offload: bool = False
 
 
 # Setup
@@ -81,7 +82,6 @@ config = Configuration()
 
 if os.environ.get("LOCAL_RANK") is not None:
     config.distributed = True
-    # dist.init_process_group(backend='nccl')
     deepspeed.init_distributed('nccl')
     config.rank = dist.get_rank()
     config.world_size = dist.get_world_size()
@@ -129,7 +129,6 @@ else:
 
 # Preparing model
 model = Net(config)
-# model = model.to(config.device)
 
 # Training 
 trainer = Trainer(config, model, train_loader, 
