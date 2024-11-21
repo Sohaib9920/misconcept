@@ -20,8 +20,8 @@ class Configuration:
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
-    eval_val = True
-    eval_train = True
+    eval_val = False
+    eval_train = False
     margin: float = 0.16
     eval_batch_size: int = 768
     max_contents = 128
@@ -35,9 +35,9 @@ class Configuration:
         
     # Training 
     seed: int = 42
-    epochs: int = 2
-    train_batch_size: int = 512
-    gradient_checkpointing: bool = True 
+    epochs: int = 1
+    train_batch_size: int = 128
+    gradient_checkpointing: bool = False 
     weight_decay = 0.0
 
     # model_config
