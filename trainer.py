@@ -96,9 +96,6 @@ class Trainer:
                                                                                 config=ds_config,
                                                                                 lr_scheduler=self.scheduler,
                                                                                 dist_init_required=True)
-            print(self.model)
-            print(self.model.module)
-            print(self.model.logit_scale)
 
         if self.config.rank == 0:
             for n, p in self.model.named_parameters():
@@ -133,7 +130,6 @@ class Trainer:
             t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
             c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
             logit_scale = self.model.logit_scale.exp()
-            print(logit_scale)
             loss = self.loss_function(t_features, c_features, logit_scale)
         
             # self.scaler.scale(loss).backward()
