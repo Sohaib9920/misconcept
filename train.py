@@ -38,7 +38,7 @@ class Configuration:
     epochs: int = 1
     train_batch_size: int = 32
     gradient_checkpointing: bool = True 
-    weight_decay = 0.0
+    weight_decay = 0.01
 
     # model_config
     torch_dtype = torch.float32
@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 3
+    zero: int = 0
     offload: bool = False
 
 
