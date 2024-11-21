@@ -89,8 +89,8 @@ class Trainer:
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
                     },
-                    "contiguous_gradients": True,
-                    # "overlap_comm": True,
+                    # "contiguous_gradients": True,
+                    "overlap_comm": True,
                     # "allgather_bucket_size": 5e8,
                     # "reduce_bucket_size": 5e8,
                     # "stage3_max_live_parameters" : 1e9,
