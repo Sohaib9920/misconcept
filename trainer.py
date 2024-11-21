@@ -96,7 +96,7 @@ class Trainer:
                                                                                 config=ds_config,
                                                                                 lr_scheduler=self.scheduler,
                                                                                 dist_init_required=True)
-            print(model)
+            print(self.model)
 
         if self.config.rank == 0:
             for n, p in self.model.named_parameters():
