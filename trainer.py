@@ -73,7 +73,7 @@ class Trainer:
                 "train_batch_size": config.train_batch_size,
                 "gradient_accumulation_steps": 1,
                 "gradient_clipping": config.max_grad_norm,
-                "steps_per_print": 10,
+                # "steps_per_print": 10,
                 "fp16": {
                     "enabled": config.fp16,
                     "loss_scale_window": 100
