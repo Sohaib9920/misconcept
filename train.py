@@ -36,7 +36,7 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 2
-    train_batch_size: int = 128
+    train_batch_size: int = 512
     gradient_checkpointing: bool = True 
     weight_decay = 0.0
 
