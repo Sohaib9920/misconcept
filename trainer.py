@@ -91,8 +91,8 @@ class Trainer:
                 }
             }
 
-            self.model, self.optmizer, _, self.scheduler = deepspeed.initialize(model=self.model,
-                                                                                optimizer=self.optmizer,
+            self.model, self.optimizer, _, self.scheduler = deepspeed.initialize(model=self.model,
+                                                                                optimizer=self.optimizer,
                                                                                 config=ds_config,
                                                                                 lr_scheduler=self.scheduler,
                                                                                 dist_init_required=True)
@@ -116,7 +116,7 @@ class Trainer:
         step_loss = 0
         log_info = {}
         
-        self.optimizer.zero_grad()
+        # self.optimizer.zero_grad()
         
         for i, batch in enumerate(self.train_loader):
             t_input_ids, t_attention_mask = batch["t_input_ids"].to(device, non_blocking=True), batch["t_attention_mask"].to(device, non_blocking=True)
