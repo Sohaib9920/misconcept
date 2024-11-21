@@ -52,19 +52,19 @@ class Net(nn.Module):
 
         quantization_config = get_quantization_config(config)
         try:
-            transformer = AutoModel.from_pretrained(config.transformer, 
-                                                    torch_dtype=config.torch_dtype,
-                                                    add_pooling_layer=(config.pooling == "pooler"),
-                                                    quantization_config=quantization_config)
+            self.transformer = AutoModel.from_pretrained(config.transformer, 
+                                                         torch_dtype=config.torch_dtype,
+                                                         add_pooling_layer=(config.pooling == "pooler"),
+                                                         quantization_config=quantization_config)
         except TypeError as e:
             print(e)
-            transformer = AutoModel.from_pretrained(config.transformer, 
-                                                    torch_dtype=config.torch_dtype,
-                                                    quantization_config=quantization_config)
+            self.transformer = AutoModel.from_pretrained(config.transformer, 
+                                                         torch_dtype=config.torch_dtype,
+                                                         quantization_config=quantization_config)
             
         peft_config = get_peft_config(config)
         if peft_config:
-            self.transformer = get_peft_model(transformer, peft_config)
+            self.transformer = get_peft_model(self.transformer, peft_config)
             self.transformer.print_trainable_parameters()
 
         if config.pooling == "cls":
