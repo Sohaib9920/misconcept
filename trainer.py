@@ -73,7 +73,6 @@ class Trainer:
                 "train_batch_size": config.train_batch_size,
                 "gradient_accumulation_steps": 1,
                 "gradient_clipping": config.max_grad_norm,
-                # "steps_per_print": 10,
                 "fp16": {
                     "enabled": config.fp16,
                     "loss_scale_window": 100
@@ -89,15 +88,9 @@ class Trainer:
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
                     },
-                    # "contiguous_gradients": True,
-                    # "overlap_comm": True,
-                    # "allgather_bucket_size": 5e8,
-                    # "reduce_bucket_size": 5e8,
-                    # "stage3_max_live_parameters" : 1e9,
-                    # "stage3_max_reuse_distance" : 1e9,
-                    # "stage3_prefetch_bucket_size" : 5e8,
-                    # "stage3_param_persistence_threshold" : 1e6,
-                    # "prescale_gradients": False
+                    "stage3_max_live_parameters" : 1e9,
+                    "stage3_prefetch_bucket_size" : 5e8,
+                    "stage3_param_persistence_threshold" : 1e6
                 }
             }
 
