@@ -97,6 +97,8 @@ class Trainer:
                                                                                 lr_scheduler=self.scheduler,
                                                                                 dist_init_required=True)
             print(self.model)
+            print(self.model.module)
+            print(self.model.logit_scale)
 
         if self.config.rank == 0:
             for n, p in self.model.named_parameters():
