@@ -27,7 +27,7 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = True
+    fp16: bool = False
     bf16: bool = False
     
     # Debugging
@@ -37,7 +37,7 @@ class Configuration:
     seed: int = 42
     epochs: int = 1
     train_batch_size: int = 32
-    gradient_checkpointing: bool = True 
+    gradient_checkpointing: bool = False 
     weight_decay = 0.0
 
     # model_config
@@ -61,7 +61,7 @@ class Configuration:
     
     # Learning Rate
     lr: float = 0.0002                   
-    scheduler: str = "cosine"       
+    scheduler: str = None      
     warmup_ratio: float = 0.25/1
     
     # Data
@@ -81,8 +81,8 @@ config = Configuration()
 
 if os.environ.get("LOCAL_RANK") is not None:
     config.distributed = True
-    dist.init_process_group(backend='nccl')
-    # deepspeed.init_distributed('nccl')
+    # dist.init_process_group(backend='nccl')
+    deepspeed.init_distributed('nccl')
     config.rank = dist.get_rank()
     config.world_size = dist.get_world_size()
 else:
@@ -129,7 +129,7 @@ else:
 
 # Preparing model
 model = Net(config)
-model = model.to(config.device)
+# model = model.to(config.device)
 
 # Training 
 trainer = Trainer(config, model, train_loader, 

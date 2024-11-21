@@ -51,10 +51,10 @@ class Trainer:
         self.optimizer = FusedAdam(param_groups, lr=config.lr, betas=(0.9, 0.95))
         
         ######### AMP Scaler and Context ##########
-        use_amp = config.bf16 or config.fp16
-        amp_dtype = torch.float16 if config.fp16 else torch.bfloat16 if config.bf16 else None
-        self.scaler = torch.amp.GradScaler(enabled=use_amp and not config.bf16)
-        self.amp_context = torch.amp.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp)
+        # use_amp = config.bf16 or config.fp16
+        # amp_dtype = torch.float16 if config.fp16 else torch.bfloat16 if config.bf16 else None
+        # self.scaler = torch.amp.GradScaler(enabled=use_amp and not config.bf16)
+        # self.amp_context = torch.amp.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp)
         
         ############ Scheduler ##############
         steps_per_epoch = len(train_loader)
@@ -74,29 +74,29 @@ class Trainer:
 
         if self.distributed:
 
-            # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
-            # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
-            self.model = DDP(self.model, device_ids=[self.config.rank], broadcast_buffers=False, find_unused_parameters=False)
+            # # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
+            # # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
+            # self.model = DDP(self.model, device_ids=[self.config.rank], broadcast_buffers=False, find_unused_parameters=False)
 
-            # ds_config = {
-            #     "train_batch_size": self.config.train_batch_size,
-            #     "fp16": {
-            #         "enabled": self.config.fp16,
-            #         "loss_scale_window": 100
-            #     },
-            #     "bf16": {
-            #         "enabled": self.config.bf16
-            #     },
-            #     "zero_optimization": {
-            #         "stage": self.config.zero
-            #     }
-            # }
+            ds_config = {
+                "train_batch_size": config.train_batch_size,
+                "fp16": {
+                    "enabled": config.fp16,
+                    "loss_scale_window": 100
+                },
+                "bf16": {
+                    "enabled": config.bf16
+                },
+                "zero_optimization": {
+                    "stage": config.zero
+                }
+            }
 
-            # self.model, self.optimizer, _, self.scheduler = deepspeed.initialize(model=self.model,
-            #                                                                     optimizer=self.optimizer,
-            #                                                                     config=ds_config,
-            #                                                                     lr_scheduler=self.scheduler,
-            #                                                                     dist_init_required=True)
+            self.model, self.optimizer, _, self.scheduler = deepspeed.initialize(model=self.model,
+                                                                                optimizer=self.optimizer,
+                                                                                config=ds_config,
+                                                                                lr_scheduler=self.scheduler,
+                                                                                dist_init_required=True)
 
         if self.config.rank == 0:
             for n, p in self.model.named_parameters():
@@ -116,54 +116,54 @@ class Trainer:
         step_loss = 0
         log_info = {}
         
-        self.optimizer.zero_grad()
+        # self.optimizer.zero_grad()
         
         for i, batch in enumerate(self.train_loader):
             t_input_ids, t_attention_mask = batch["t_input_ids"].to(device, non_blocking=True), batch["t_attention_mask"].to(device, non_blocking=True)
             c_input_ids, c_attention_mask = batch["c_input_ids"].to(device, non_blocking=True), batch["c_attention_mask"].to(device, non_blocking=True)
 
-            with self.amp_context:
-                t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
-                c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
-                logit_scale = self.model.module.logit_scale.exp() if self.distributed else self.model.logit_scale.exp()
-                loss = self.loss_function(t_features, c_features, logit_scale)
+            # with self.amp_context:
+            #     t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
+            #     c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
+            #     logit_scale = self.model.module.logit_scale.exp() if self.distributed else self.model.logit_scale.exp()
+            #     loss = self.loss_function(t_features, c_features, logit_scale)
         
-            # t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
-            # c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
-            # logit_scale = self.model.logit_scale.exp()
-            # loss = self.loss_function(t_features, c_features, logit_scale)
+            t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
+            c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
+            logit_scale = self.model.logit_scale.exp()
+            loss = self.loss_function(t_features, c_features, logit_scale)
         
-            self.scaler.scale(loss).backward()
-            # self.model.backward(loss)
+            # self.scaler.scale(loss).backward()
+            self.model.backward(loss)
             
             step_loss = loss.item()
             log_info["step_loss"] = f"{step_loss:.5f}"
 
-            self.scaler.unscale_(self.optimizer)
-            if self.config.max_grad_norm is not None:
-                gn_before_clip = torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm) 
-                log_info["step_norm"] = f"{gn_before_clip:.4f}"
+            # self.scaler.unscale_(self.optimizer)
+            # if self.config.max_grad_norm is not None:
+            #     gn_before_clip = torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm) 
+            #     log_info["step_norm"] = f"{gn_before_clip:.4f}"
                                 
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-            self.optimizer.zero_grad()
+            # self.scaler.step(self.optimizer)
+            # self.scaler.update()
+            # self.optimizer.zero_grad()
     
             log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
-            if self.scheduler:
-                self.scheduler.step()
+            # if self.scheduler:
+            #     self.scheduler.step()
 
-            # self.model.step()
+            self.model.step()
 
             with torch.no_grad():
-                if self.distributed:
-                    self.model.module.logit_scale.clamp_(0, math.log(100))
-                    log_info["step_scale"] = f"{self.model.module.logit_scale.item():.5f}"
-                else:
-                    self.model.logit_scale.clamp_(0, math.log(100))
-                    log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
+                # if self.distributed:
+                #     self.model.module.logit_scale.clamp_(0, math.log(100))
+                #     log_info["step_scale"] = f"{self.model.module.logit_scale.item():.5f}"
+                # else:
+                #     self.model.logit_scale.clamp_(0, math.log(100))
+                #     log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
     
-                # self.model.logit_scale.clamp_(0, math.log(100))
-                # log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
+                self.model.logit_scale.clamp_(0, math.log(100))
+                log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
 
             epoch_loss += step_loss / steps_per_epoch
     
