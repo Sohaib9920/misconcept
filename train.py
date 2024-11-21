@@ -27,7 +27,7 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = True
+    fp16: bool = False
     bf16: bool = False
     
     # Debugging
@@ -61,7 +61,7 @@ class Configuration:
     
     # Learning Rate
     lr: float = 0.0002                   
-    scheduler: str = "cosine"      
+    scheduler: str = None
     warmup_ratio: float = 0.25/1
     
     # Data
@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 2
+    zero: int = 0
 
 
 # Setup
