@@ -81,8 +81,8 @@ config = Configuration()
 
 if os.environ.get("LOCAL_RANK") is not None:
     config.distributed = True
-    # dist.init_process_group(backend='nccl')
-    deepspeed.init_distributed('nccl')
+    dist.init_process_group(backend='nccl')
+    # deepspeed.init_distributed('nccl')
     config.rank = dist.get_rank()
     config.world_size = dist.get_world_size()
 else:
@@ -129,7 +129,7 @@ else:
 
 # Preparing model
 model = Net(config)
-# model = model.to(config.device)
+model = model.to(config.device)
 
 # Training 
 trainer = Trainer(config, model, train_loader, 
