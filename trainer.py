@@ -87,9 +87,7 @@ class Trainer:
                     },
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
-                    },
-                    "stage3_max_live_parameters": 1e7,
-                    "stage3_max_reuse_distance": 1e7                   
+                    }                 
                 }
             }
 
