@@ -16,7 +16,7 @@ import deepspeed
 class Configuration:
     
     # Transformer
-    transformer: str = "sentence-transformers/LaBSE"
+    transformer: str = "Qwen/Qwen2-7B"
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
@@ -41,7 +41,7 @@ class Configuration:
     weight_decay = 0.01
 
     # model_config
-    torch_dtype = torch.float32
+    torch_dtype = torch.bfloat16
     # Only use quantization when model size is very huge because when it is
     # small and use_reentrant=False, then net gain is less then only using LORA
     load_in_8bit = False
@@ -49,9 +49,9 @@ class Configuration:
     bnb_4bit_quant_type = "nf4"
     use_bnb_nested_quant = False
 
-    use_peft = False
-    lora_r = 16
-    lora_alpha = 32
+    use_peft = True
+    lora_r = 32
+    lora_alpha = 64
     lora_dropout = 0.05
     lora_target_modules = "all-linear"
 
@@ -73,8 +73,8 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 2
-    offload: bool = True
+    zero: int = 0
+    offload: bool = False
 
 
 # Setup
