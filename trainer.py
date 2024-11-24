@@ -88,8 +88,8 @@ class Trainer:
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
                     },
-                    "stage3_max_live_parameters": 3e7,
-                    "stage3_max_reuse_distance": 3e7                   
+                    "stage3_max_live_parameters": 1e7,
+                    "stage3_max_reuse_distance": 1e7                   
                 }
             }
 
@@ -126,8 +126,7 @@ class Trainer:
         
             t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
             c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
-            # logit_scale = self.model.logit_scale.squeeze().exp()
-            logit_scale = 14
+            logit_scale = self.model.logit_scale.squeeze().exp()
             loss = self.loss_function(t_features, c_features, logit_scale)
         
             self.model.backward(loss)
@@ -139,9 +138,9 @@ class Trainer:
 
             self.model.step()
 
-            # with torch.no_grad():
-            #     self.model.logit_scale.clamp_(0, math.log(100))
-            #     log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
+            with torch.no_grad():
+                self.model.logit_scale.clamp_(0, math.log(100))
+                log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
 
             epoch_loss += step_loss / steps_per_epoch
     
