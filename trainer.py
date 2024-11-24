@@ -87,10 +87,7 @@ class Trainer:
                     },
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
-                    },
-                    "stage3_max_live_parameters" : 1e9,
-                    "stage3_prefetch_bucket_size" : 5e8,
-                    "stage3_param_persistence_threshold" : 1e6
+                    }
                 }
             }
 
