@@ -87,8 +87,7 @@ class Trainer:
                     },
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
-                    },
-                    "overlap_comm": True
+                    }                    
                 }
             }
 
