@@ -87,7 +87,9 @@ class Trainer:
                     },
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
-                    }
+                    },
+                    "allgather_bucket_size": 2e8,
+                    "reduce_bucket_size": 2e8
                 }
             }
 
