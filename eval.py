@@ -119,7 +119,7 @@ def predict_contents(similarity_matrix, topic_ids, content_ids, margin=0.16, max
         # Get relevent predicted contents and add them to predicted topic2content
         pd_contents = content_ids[indices.cpu()]
         topic = topic_ids[i]
-        pd_topic2content[topic] = list(pd_contents) # need the order so keep it in list rather than set
+        pd_topic2content[topic] = list(pd_contents)
     
     return pd_topic2content
 
