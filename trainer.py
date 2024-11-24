@@ -96,6 +96,9 @@ class Trainer:
                                                                                 config=ds_config,
                                                                                 lr_scheduler=self.scheduler,
                                                                                 dist_init_required=True)
+        
+        else:
+            self.model.to(self.config.device)
 
         if self.config.rank == 0:
             for n, p in self.model.named_parameters():
