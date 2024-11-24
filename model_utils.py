@@ -82,7 +82,7 @@ class Net(nn.Module):
          
         # According to CLIP paper. temperature range: [0, inf], scale range: [inf, 0], ln(scale) range: [-inf, inf] 
         # It better to have unrestricted range for parameter so we take ln(scale)
-        self.logit_scale = torch.nn.Parameter(torch.ones(1, dtype=config.torch_dtype) * np.log(1 / 0.07)) 
+        # self.logit_scale = torch.nn.Parameter(torch.ones(1, dtype=config.torch_dtype) * np.log(1 / 0.07)) 
     
     
     def forward(self, input_ids, attention_mask):
