@@ -99,7 +99,7 @@ set_seed(config.seed)
 # loading correlation data
 df_correlations = pd.read_csv('/kaggle/input/curriculum-split-data-prep/correlations.csv')
 if config.debug:
-    _, df_correlations = train_test_split(df_correlations, stratify=df_correlations["fold"], random_state=config.seed, test_size=500)
+    _, df_correlations = train_test_split(df_correlations, stratify=df_correlations["fold"], random_state=config.seed, test_size=100)
     df_correlations.reset_index(drop=True, inplace=True)
 
 # Preparing data loaders
