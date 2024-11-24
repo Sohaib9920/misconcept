@@ -36,7 +36,7 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 1
-    train_batch_size: int = 32
+    train_batch_size: int = 8
     gradient_checkpointing: bool = True 
     weight_decay = 0.01
 
@@ -50,8 +50,8 @@ class Configuration:
     use_bnb_nested_quant = False
 
     use_peft = True
-    lora_r = 32
-    lora_alpha = 64
+    lora_r = 16
+    lora_alpha = 32
     lora_dropout = 0.05
     lora_target_modules = "all-linear"
 
