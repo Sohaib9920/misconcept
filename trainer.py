@@ -88,8 +88,6 @@ class Trainer:
                     "offload_optimizer": {
                         "device": "cpu" if config.offload else "none",
                     },
-                    "allgather_bucket_size": 2e7,
-                    "reduce_bucket_size": 2e7,
                     "overlap_comm": True
                 }
             }
