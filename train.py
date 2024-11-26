@@ -16,7 +16,7 @@ import deepspeed
 class Configuration:
     
     # Transformer
-    transformer: str = "Qwen/Qwen2-7B"
+    transformer: str = "sentence-transformers/LaBSE"
     pooling: str = 'cls'                   # 'mean' | 'cls' | 'pooler' | 'last'
 
     # Eval
@@ -36,7 +36,7 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 1
-    train_batch_size: int = 8
+    train_batch_size: int = 512
     gradient_checkpointing: bool = True 
     weight_decay = 0.01
 
@@ -49,7 +49,7 @@ class Configuration:
     bnb_4bit_quant_type = "nf4"
     use_bnb_nested_quant = False
 
-    use_peft = True
+    use_peft = False
     lora_r = 16
     lora_alpha = 32
     lora_dropout = 0.05
@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 3
+    zero: int = 2
     offload: bool = False
 
 
@@ -109,8 +109,8 @@ train_pairs, topic2content, content2topic, train_topics, eval_topics, train_cont
 topic2text = read_pkl("/kaggle/input/curriculum-split-data-prep/topic2text.pkl")
 content2text = read_pkl("/kaggle/input/curriculum-split-data-prep/content2text.pkl")
 
-assert config.train_batch_size % config.world_size == 0, "Train Batch size must be divisible by world size for proper gather operation"
-assert config.eval_batch_size % config.world_size == 0, "Eval Batch size must be divisible by world size for proper gather operation"
+assert config.train_batch_size % config.world_size == 0, "Train Batch size must be divisible by world size to evenly distribute data"
+assert config.eval_batch_size % config.world_size == 0, "Eval Batch size must be divisible by world size to evenly distribute data"
   
 train_dataset = TrainDataset(train_pairs, topic2content, content2topic, config.train_batch_size, tokenizer, topic2text, content2text, config.max_len)
 train_loader = DataLoader(train_dataset, batch_size=None, collate_fn=train_dataset.collater, shuffle=True)
