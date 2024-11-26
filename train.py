@@ -28,7 +28,7 @@ class Configuration:
 
     # Others
     fp16: bool = False
-    bf16: bool = True
+    bf16: bool = False
     
     # Debugging
     debug = True                     
