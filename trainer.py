@@ -126,6 +126,7 @@ class Trainer:
             c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
             logit_scale = self.model.logit_scale.squeeze().exp()
             loss = self.loss_function(t_features, c_features, logit_scale)
+            print(loss)
         
             self.model.backward(loss)
             
