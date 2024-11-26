@@ -27,8 +27,8 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = False
-    bf16: bool = True
+    fp16: bool = True
+    bf16: bool = False
     
     # Debugging
     debug = True                     
