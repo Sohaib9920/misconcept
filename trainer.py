@@ -71,7 +71,7 @@ class Trainer:
 
             ds_config = {
                 "train_micro_batch_size_per_gpu": config.train_batch_size // config.world_size,
-                "gradient_accumulation_steps": 1,
+                "gradient_accumulation_steps": 2,
                 "gradient_clipping": config.max_grad_norm,
                 "fp16": {
                     "enabled": config.fp16,
@@ -111,13 +111,14 @@ class Trainer:
     def train_epoch(self):
         self.model.train()
         
-        steps_per_epoch = len(self.train_loader) # found at each epoch as it is dynamic
+        steps_per_epoch = len(self.train_loader) // 2 # found at each epoch as it is dynamic
         bar = tqdm(total=steps_per_epoch, desc=f"{self.config.rank} Training Steps")
 
         device = self.config.device
         epoch_loss = 0
         step_loss = 0
         log_info = {}
+        step = 0
                 
         for i, batch in enumerate(self.train_loader):
             t_input_ids, t_attention_mask = batch["t_input_ids"].to(device, non_blocking=True), batch["t_attention_mask"].to(device, non_blocking=True)
@@ -126,34 +127,40 @@ class Trainer:
             c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
             logit_scale = self.model.logit_scale.squeeze().exp()
             loss = self.loss_function(t_features, c_features, logit_scale) # same in both single and distributed case due to gather
+            step_loss += loss.item() / 2
 
             if self.distributed:
                 self.model.backward(loss)
             else:
+                loss = loss / 2
                 loss.backward()
             
-            step_loss = loss.item()
-
-            log_info["step_loss"] = f"{step_loss:.5f}"
-            log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
-
             if self.distributed:
                 self.model.step()
             else:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-                if self.scheduler:
-                    self.scheduler.step()
+                if (i + 1) % 2 == 0:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()
+                    if self.scheduler:
+                        self.scheduler.step()
 
-            with torch.no_grad():
-                self.model.logit_scale.clamp_(0, math.log(100))
-                log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
-
-            epoch_loss += step_loss / steps_per_epoch
+            if (i + 1) % 2 == 0:
+                log_info["step_loss"] = f"{step_loss:.5f}"
+                log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
+                with torch.no_grad():
+                    self.model.logit_scale.clamp_(0, math.log(100))
+                    log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
+                
+                    epoch_loss += step_loss / steps_per_epoch
+                    step_loss = 0
+                    step += 1
     
-            bar.set_postfix(ordered_dict=log_info)
-            bar.update(1)
+                    bar.set_postfix(ordered_dict=log_info)
+                    bar.update(1)
+            
+            if step == steps_per_epoch:
+                break
         
         bar.close()
         return epoch_loss
