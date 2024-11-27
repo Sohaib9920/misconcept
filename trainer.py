@@ -140,11 +140,12 @@ class Trainer:
             if self.distributed:
                 self.model.step()
             else:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-                if self.scheduler:
-                    self.scheduler.step()
+                if (i + 1) % 2 == 0:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()
+                    if self.scheduler:
+                        self.scheduler.step()
 
             with torch.no_grad():
                 self.model.logit_scale.clamp_(0, math.log(100))
