@@ -70,7 +70,7 @@ class Trainer:
         if self.distributed:
 
             ds_config = {
-                "train_batch_size": config.train_batch_size,
+                "train_micro_batch_size_per_gpu": config.train_batch_size / config.world_size,
                 "gradient_accumulation_steps": 1,
                 "gradient_clipping": config.max_grad_norm,
                 "fp16": {
