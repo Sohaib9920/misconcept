@@ -74,7 +74,7 @@ class Configuration:
 
     # deepspeed
     zero: int = 2
-    offload: bool = False
+    offload: bool = True
 
 
 # Setup
