@@ -56,7 +56,7 @@ class Trainer:
         use_amp = config.bf16 or config.fp16
         amp_dtype = torch.float16 if config.fp16 else torch.bfloat16 if config.bf16 else None
         self.scaler = torch.amp.GradScaler(enabled=use_amp and not config.bf16)
-        self.amp_context = torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp)
+        self.amp_context = torch.autocast(device_type=config.device.type, dtype=amp_dtype, enabled=use_amp)
         self.ctx = self.amp_context if not self.distributed else nullcontext()
         
         ############ Scheduler ##############
