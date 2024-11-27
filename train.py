@@ -27,8 +27,8 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = False
-    bf16: bool = True
+    fp16: bool = True
+    bf16: bool = False
     
     # Debugging
     debug = False                     
@@ -36,7 +36,7 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 1
-    train_batch_size: int = 2560
+    train_batch_size: int = 2048
     grad_accum_steps: int = 1
     gradient_checkpointing: bool = True 
     weight_decay = 0.01
