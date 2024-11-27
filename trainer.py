@@ -6,9 +6,9 @@ from model_utils import CLIPLoss
 from eval import evaluate_eval, evaluate_train
 import math
 import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
 import deepspeed
 from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam
+from contextlib import nullcontext
 
 
 class Trainer:
@@ -28,6 +28,7 @@ class Trainer:
         self.content2topic = content2topic
 
         self.distributed = self.config.distributed
+        self.grad_accum_steps = self.config.grad_accum_steps 
 
         if self.eval_loader_topic is not None and self.eval_loader_content is not None:
             assert (self.topic2content is not None)
@@ -50,6 +51,13 @@ class Trainer:
         param_groups = [{"params": decay_params, "weight_decay": config.weight_decay}, {"params": non_decay_params, "weight_decay": 0.0}]
         AdamOptimizer = DeepSpeedCPUAdam if config.offload else FusedAdam
         self.optimizer = AdamOptimizer(param_groups, lr=config.lr, betas=(0.9, 0.95))
+
+        ######### AMP Scaler and Context ##########
+        use_amp = config.bf16 or config.fp16
+        amp_dtype = torch.float16 if config.fp16 else torch.bfloat16 if config.bf16 else None
+        self.scaler = torch.amp.GradScaler(enabled=use_amp and not config.bf16)
+        self.amp_context = torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp)
+        self.ctx = self.amp_context if not self.distributed else nullcontext()
         
         ############ Scheduler ##############
         steps_per_epoch = len(train_loader)
@@ -69,9 +77,14 @@ class Trainer:
 
         if self.distributed:
 
+            # # DDP: alternative of deepspeed zero 0
+            # # Either do single forward pass by concatenating topics and contents OR use broadcast_buffers=False
+            # # Either removed all unused parameters by using add_pooling_layer=False OR use find_unused_parameters=True with overhead of finding them
+            # self.model = DDP(self.model, device_ids=[self.config.rank], broadcast_buffers=False, find_unused_parameters=False)
+
             ds_config = {
                 "train_micro_batch_size_per_gpu": config.train_batch_size // config.world_size,
-                "gradient_accumulation_steps": 2,
+                "gradient_accumulation_steps": config.grad_accum_steps,
                 "gradient_clipping": config.max_grad_norm,
                 "fp16": {
                     "enabled": config.fp16,
@@ -111,7 +124,7 @@ class Trainer:
     def train_epoch(self):
         self.model.train()
         
-        steps_per_epoch = len(self.train_loader) // 2 # found at each epoch as it is dynamic
+        steps_per_epoch = len(self.train_loader) // self.grad_accum_steps # found at each epoch as it is dynamic
         bar = tqdm(total=steps_per_epoch, desc=f"{self.config.rank} Training Steps")
 
         device = self.config.device
@@ -121,34 +134,39 @@ class Trainer:
         step = 0
                 
         for i, batch in enumerate(self.train_loader):
-            t_input_ids, t_attention_mask = batch["t_input_ids"].to(device, non_blocking=True), batch["t_attention_mask"].to(device, non_blocking=True)
-            c_input_ids, c_attention_mask = batch["c_input_ids"].to(device, non_blocking=True), batch["c_attention_mask"].to(device, non_blocking=True)
-            t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
-            c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
-            logit_scale = self.model.logit_scale.squeeze().exp()
-            loss = self.loss_function(t_features, c_features, logit_scale) # same in both single and distributed case due to gather
-            step_loss += loss.item() / 2
+
+            with self.ctx:
+                t_input_ids, t_attention_mask = batch["t_input_ids"].to(device, non_blocking=True), batch["t_attention_mask"].to(device, non_blocking=True)
+                c_input_ids, c_attention_mask = batch["c_input_ids"].to(device, non_blocking=True), batch["c_attention_mask"].to(device, non_blocking=True)
+                t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
+                c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
+                logit_scale = self.model.logit_scale.squeeze().exp()
+                loss = self.loss_function(t_features, c_features, logit_scale) # same in both single and distributed case due to gather
+            
+            step_loss += loss.item() / self.grad_accum_steps
 
             if self.distributed:
                 self.model.backward(loss)
             else:
-                loss = loss / 2
-                loss.backward()
+                loss = loss / self.grad_accum_steps
+                self.scaler.scale(loss).backward()
             
             if self.distributed:
                 self.model.step()
             else:
-                if (i + 1) % 2 == 0:
+                if (i + 1) % self.grad_accum_steps == 0:
+                    self.scaler.unscale_(self.optimizer)
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
-                    self.optimizer.step()
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
                     self.optimizer.zero_grad()
                     if self.scheduler:
                         self.scheduler.step()
 
-            if (i + 1) % 2 == 0:
+            if (i + 1) % self.grad_accum_steps == 0:
                 log_info["step_loss"] = f"{step_loss:.5f}"
                 log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
-                
+
                 with torch.no_grad():
                     self.model.logit_scale.clamp_(0, math.log(100))
                     log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
@@ -160,7 +178,7 @@ class Trainer:
                 bar.set_postfix(ordered_dict=log_info)
                 bar.update(1)
             
-            if step == steps_per_epoch:
+            if step == steps_per_epoch: # discard leftover batches
                 break
         
         bar.close()
