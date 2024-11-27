@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 3
+    zero: int = 2
     offload: bool = False
 
 
@@ -113,7 +113,7 @@ assert config.train_batch_size % config.world_size == 0, "Train Batch size must 
 assert config.eval_batch_size % config.world_size == 0, "Eval Batch size must be divisible by world size to evenly distribute data"
   
 train_dataset = TrainDataset(train_pairs, topic2content, content2topic, config.train_batch_size, tokenizer, topic2text, content2text, config.max_len)
-train_loader = DataLoader(train_dataset, batch_size=None, collate_fn=train_dataset.collater, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=None, shuffle=True)
 
 if config.eval_train:
     print("train loader (eval)")

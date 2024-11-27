@@ -44,14 +44,7 @@ class TrainDataset(Dataset):
         """
         Fetch a batch of pairs based on the given index.
         """
-        pairs_batch = self.batches[index]
-        return pairs_batch
-    
-
-    def collater(self, batch):
-        """
-        Split the batch of pairs if it is distributed and then tokenize that split.
-        """
+        batch = self.batches[index]
         if self.splitter is not None:
             batch = self.splitter(batch)
         inputs = self.tokenize_pairs_batch(batch, self.tokenizer, self.topic2text, self.content2text, self.max_len)
