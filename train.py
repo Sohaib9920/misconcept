@@ -27,8 +27,8 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = True
-    bf16: bool = False
+    fp16: bool = False
+    bf16: bool = True
     
     # Debugging
     debug = True                     
@@ -36,13 +36,13 @@ class Configuration:
     # Training 
     seed: int = 42
     epochs: int = 1
-    train_batch_size: int = 32
+    train_batch_size: int = 512
     grad_accum_steps: int = 1
     gradient_checkpointing: bool = True 
     weight_decay = 0.01
 
     # model_config
-    torch_dtype = torch.float32
+    torch_dtype = torch.bfloat16
     # Only use quantization when model size is very huge because when it is
     # small and use_reentrant=False, then net gain is less then only using LORA
     load_in_8bit = False
@@ -102,7 +102,7 @@ set_seed(config.seed)
 # loading correlation data
 df_correlations = pd.read_csv('/kaggle/input/curriculum-split-data-prep/correlations.csv')
 if config.debug:
-    _, df_correlations = train_test_split(df_correlations, stratify=df_correlations["fold"], random_state=config.seed, test_size=500)
+    _, df_correlations = train_test_split(df_correlations, stratify=df_correlations["fold"], random_state=config.seed, test_size=1000)
     df_correlations.reset_index(drop=True, inplace=True)
 
 # Preparing data loaders
