@@ -89,7 +89,9 @@ class Trainer:
                         "device": "cpu" if config.offload else "none",
                     },
                     "stage3_max_live_parameters": 1e7,
-                    "stage3_max_reuse_distance": 1e7                
+                    "stage3_max_reuse_distance": 1e7,
+                    "stage3_gather_fp16_weights_on_model_save": True,
+                    "stage3_prefetch_bucket_size": 0.0              
                 }
             }
 
