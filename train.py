@@ -31,12 +31,12 @@ class Configuration:
     bf16: bool = True
     
     # Debugging
-    debug = True                     
+    debug = False                     
         
     # Training 
     seed: int = 42
     epochs: int = 1
-    train_batch_size: int = 2048
+    train_batch_size: int = 2560
     grad_accum_steps: int = 1
     gradient_checkpointing: bool = True 
     weight_decay = 0.01
