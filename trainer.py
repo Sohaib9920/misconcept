@@ -148,16 +148,17 @@ class Trainer:
             if (i + 1) % 2 == 0:
                 log_info["step_loss"] = f"{step_loss:.5f}"
                 log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
+                
                 with torch.no_grad():
                     self.model.logit_scale.clamp_(0, math.log(100))
                     log_info["step_scale"] = f"{self.model.logit_scale.item():.5f}"
                 
-                    epoch_loss += step_loss / steps_per_epoch
-                    step_loss = 0
-                    step += 1
-    
-                    bar.set_postfix(ordered_dict=log_info)
-                    bar.update(1)
+                epoch_loss += step_loss / steps_per_epoch
+                step_loss = 0
+                step += 1
+
+                bar.set_postfix(ordered_dict=log_info)
+                bar.update(1)
             
             if step == steps_per_epoch:
                 break
