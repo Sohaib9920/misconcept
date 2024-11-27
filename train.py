@@ -28,7 +28,7 @@ class Configuration:
 
     # Others
     fp16: bool = False
-    bf16: bool = False
+    bf16: bool = True
     
     # Debugging
     debug = True                     
@@ -42,7 +42,7 @@ class Configuration:
     weight_decay = 0.01
 
     # model_config
-    torch_dtype = torch.float32
+    torch_dtype = torch.bfloat16
     # Only use quantization when model size is very huge because when it is
     # small and use_reentrant=False, then net gain is less then only using LORA
     load_in_8bit = False
