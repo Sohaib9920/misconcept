@@ -28,7 +28,7 @@ class Configuration:
 
     # Others
     fp16: bool = False
-    bf16: bool = True
+    bf16: bool = False
     
     # Debugging
     debug = True                     
@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 2
+    zero: int = 0
     offload: bool = False
 
 
