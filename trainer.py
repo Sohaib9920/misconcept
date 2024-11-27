@@ -127,15 +127,25 @@ class Trainer:
             c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
             logit_scale = self.model.logit_scale.squeeze().exp()
             loss = self.loss_function(t_features, c_features, logit_scale)
-        
-            self.model.backward(loss)
+
+            if self.distributed:
+                self.model.backward(loss)
+            else:
+                loss.backward()
             
             step_loss = loss.item()
 
             log_info["step_loss"] = f"{step_loss:.5f}"
             log_info["step_lr"] = f"{self.optimizer.param_groups[0]['lr']:.3e}"
 
-            self.model.step()
+            if self.distributed:
+                self.model.step()
+            else:
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+                if self.scheduler:
+                    self.scheduler.step()
 
             with torch.no_grad():
                 self.model.logit_scale.clamp_(0, math.log(100))
