@@ -27,8 +27,8 @@ class Configuration:
     max_contents = 128
 
     # Others
-    fp16: bool = True
-    bf16: bool = False
+    fp16: bool = False
+    bf16: bool = True
     
     # Debugging
     debug = True                     
@@ -41,7 +41,7 @@ class Configuration:
     weight_decay = 0.01
 
     # model_config
-    torch_dtype = torch.float32
+    torch_dtype = torch.bfloat16
     # Only use quantization when model size is very huge because when it is
     # small and use_reentrant=False, then net gain is less then only using LORA
     load_in_8bit = False
@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 2
+    zero: int = 0
     offload: bool = False
 
 
