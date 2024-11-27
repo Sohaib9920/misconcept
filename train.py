@@ -73,7 +73,7 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 1
+    zero: int = 2
     offload: bool = False
 
 
