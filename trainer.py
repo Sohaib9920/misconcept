@@ -130,6 +130,7 @@ class Trainer:
             if self.distributed:
                 self.model.backward(loss)
             else:
+                loss = loss / 2
                 loss.backward()
             
             step_loss = loss.item()
