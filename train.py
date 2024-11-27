@@ -73,7 +73,9 @@ class Configuration:
     missing_freq: float = 0.5
 
     # deepspeed
-    zero: int = 2
+    # Distributed give memory gains for very large batch sizes and is faster
+    # zero 3 give gains with large model size and many devices
+    zero: int = 2 
     offload: bool = False
 
 
