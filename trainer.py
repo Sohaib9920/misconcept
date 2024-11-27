@@ -71,7 +71,7 @@ class Trainer:
 
             ds_config = {
                 "train_micro_batch_size_per_gpu": config.train_batch_size // config.world_size,
-                "gradient_accumulation_steps": 2,
+                "gradient_accumulation_steps": 1,
                 "gradient_clipping": config.max_grad_norm,
                 "fp16": {
                     "enabled": config.fp16,
@@ -125,12 +125,11 @@ class Trainer:
             t_features = self.model(input_ids=t_input_ids, attention_mask=t_attention_mask)
             c_features = self.model(input_ids=c_input_ids, attention_mask=c_attention_mask)
             logit_scale = self.model.logit_scale.squeeze().exp()
-            loss = self.loss_function(t_features, c_features, logit_scale)
+            loss = self.loss_function(t_features, c_features, logit_scale) # same in both single and distributed case due to gather
 
             if self.distributed:
                 self.model.backward(loss)
             else:
-                loss = loss / 2
                 loss.backward()
             
             step_loss = loss.item()
@@ -141,12 +140,11 @@ class Trainer:
             if self.distributed:
                 self.model.step()
             else:
-                if (i + 1) % 2 == 0:
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
-                    self.optimizer.step()
-                    self.optimizer.zero_grad()
-                    if self.scheduler:
-                        self.scheduler.step()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.config.max_grad_norm)
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+                if self.scheduler:
+                    self.scheduler.step()
 
             with torch.no_grad():
                 self.model.logit_scale.clamp_(0, math.log(100))
